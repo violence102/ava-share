@@ -1,96 +1,128 @@
 import React from 'react';
-import { AgGridReact } from 'ag-grid-react';
-import 'ag-grid-community/dist/styles/ag-grid.css';
-import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import SwipeableViews from 'react-swipeable-views';
+import { makeStyles, Theme, useTheme } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import Typography from '@material-ui/core/Typography';
+import Box from '@material-ui/core/Box';
+import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
+import Card from '@material-ui/core/Card';
+import CardMedia from '@material-ui/core/CardMedia';
 import './App.css';
-import { ItemType, Status, Item, Person } from './domain'
+import Enjoy from './Enjoy'
+import Share from './Share'
 
-const App: React.FC = () => {
-  const items: Array<Item> = [
-    {
-      title: 'JS in one week',
-      type: ItemType.BOOK,
-      owner: {
-        firstName: 'Krzysztof',
-        lastName: 'Głogocki',
-        city: "Wrocław"
-      },
-      status: Status.AVAILABLE
-    },
-    {
-      title: 'Scala for Dummies',
-      type: ItemType.BOOK,
-      owner: {
-        firstName: 'Przemysław',
-        lastName: 'Wierzbicki',
-        city: 'Stamford'
-      },
-      lender: {
-        firstName: 'Przemysław',
-        lastName: 'Zajadlak',
-        city: 'Wrocław'
-      },
-      status: Status.NOT_AVAILABLE
-    }
-  ];
-  
-  const columnDefs: Array<any> = [{
-    headerName: "Title",
-    field: "title"
-  }, {
-    headerName: "Type",
-    field: "type"
-  }, {
-    headerName: "Owner",
-    valueGetter: function(params: any) {
-      return `${personGetter(params.node.data.owner)}`;
-    }
-  }, {
-    headerName: "Status",
-    field: "status"
-  }, {
-    headerName: "Lender",
-    field: "lender",
-    valueGetter: function(params: any) {
-      return `${personGetter(params.node.data.lender)}`;
-    }
-  }];
+interface TabPanelProps {
+  children?: React.ReactNode;
+  dir?: string;
+  index: any;
+  value: any;
+}
 
-  function personGetter(person: Person) {
-    return person ? `${person.firstName} ${person.lastName}, ${person.city}` : '-';
-  };
-
-  /**
-   * Cram all columns to fit into the grid initially.
-   */
-  const onGridReady = (params: any) => {
-    params.api.sizeColumnsToFit();
-  };
-
-  /**
-   * Auto-size all columns once the initial data is rendered.
-   */
-  const autoSizeColumns = (params: any) => {
-    const colIds = params.columnApi
-      .getAllDisplayedColumns()
-      .map((col: any) => col.getColId());
-
-    params.columnApi.autoSizeColumns(colIds);
-  };
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
   return (
-    <div
-      className = "ag-theme-balham"
-      style = {{
-        height: '200px',
-        width: '100%' 
-      }}>
-      <AgGridReact
-        columnDefs = { columnDefs }
-        rowData = { items }
-        onGridReady={ onGridReady }
-        onFirstDataRendered={ autoSizeColumns }>
-      </AgGridReact>
+    <Typography
+      component="div"
+      role="tabpanel"
+      hidden={value !== index}
+      id={`full-width-tabpanel-${index}`}
+      aria-labelledby={`full-width-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box p={3}>{children}</Box>}
+    </Typography>
+  );
+}
+
+function a11yProps(index: any) {
+  return {
+    id: `full-width-tab-${index}`,
+    'aria-controls': `full-width-tabpanel-${index}`
+  };
+}
+
+const useStyles = makeStyles((theme: Theme) => ({
+  root: {
+    backgroundColor: theme.palette.background.paper,
+    flexGrow: 1,
+    width: '100%'
+  },
+  paper: {
+    color: theme.palette.text.secondary,
+    width: '100%'
+  },
+  media: {
+    height: '100%',
+    width: '28%',
+    margin: 'auto'
+  },
+  card: {
+    height: 100,
+    width: '100%'
+  }
+}));
+
+const App: React.FC = () => {
+  const classes = useStyles();
+  const theme = useTheme();
+  const [value, setValue] = React.useState(0);
+
+  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    setValue(newValue);
+  };
+
+  const handleChangeIndex = (index: number) => {
+    setValue(index);
+  };
+  
+  return (
+    <div className={classes.root}>
+      <Grid container>
+        <Grid item xs={12}>
+          <Paper className={classes.paper}>
+            <Card className={classes.card}>
+              <CardMedia
+                className={classes.media}
+                image="./Avashare.png"
+                title="AvaShare"
+              />
+            </Card>
+          </Paper>
+        </Grid>
+        <Grid item xs={12}>
+          <Paper className={classes.paper}>
+            <AppBar position="static" color="default">
+              <Tabs
+                value={value}
+                onChange={handleChange}
+                indicatorColor="primary"
+                textColor="primary"
+                variant="fullWidth"
+                aria-label="full width tabs example"
+              >
+                <Tab label="Enjoy" {...a11yProps(0)} />
+                <Tab label="Share" {...a11yProps(1)} />
+              </Tabs>
+            </AppBar>
+            <SwipeableViews
+              axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+              index={value}
+              onChangeIndex={handleChangeIndex}
+            >
+              <TabPanel value={value} index={0} dir={theme.direction}>
+                <Enjoy />
+              </TabPanel>
+              <TabPanel value={value} index={1} dir={theme.direction}>
+                <Share />
+              </TabPanel>
+            </SwipeableViews>
+          </Paper>
+        </Grid>
+      </Grid>
     </div>
   );
 }
